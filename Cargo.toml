@@ -12,9 +12,6 @@ license = "MIT"
 exclude = ["/assets/*"]
 edition = "2021"
 
-[badges]
-travis-ci = { repository = "pedroscaff/swaywsr" }
-
 [dependencies]
 thiserror = "1.0.44"
 anyhow = "1.0.72"
