@@ -28,6 +28,17 @@ jobs:
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+    - name: Security audit
+      on:
+        push:
+          paths: 
+            - '**/Cargo.toml'
+            - '**/Cargo.lock'
+
+    - uses: actions-rs/audit-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Build
       run: cargo build --verbose
 
