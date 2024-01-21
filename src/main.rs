@@ -13,6 +13,9 @@ struct Cli {
     /// Set to no to display only icons (if available)
     #[arg(short, long, default_value_t = false)]
     no_names: bool,
+    /// Output debug information
+    #[arg(short, long, default_value_t = false)]
+    verbose: bool,
     /// Path to toml config file
     #[arg(short, long)]
     config: Option<PathBuf>,
@@ -41,6 +44,9 @@ fn main() -> anyhow::Result<()> {
         options: file_config.options,
     };
 
+    if cli.verbose {
+        config.options.insert("verbose".to_string(), cli.verbose);
+    }
     if cli.no_names {
         config.options.insert("no_names".to_string(), cli.no_names);
     }

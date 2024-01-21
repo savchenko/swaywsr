@@ -124,7 +124,9 @@ fn get_classes(workspace: &Node, config: &Config) -> Vec<String> {
         let class = match get_class(node, config) {
             Ok(class) => class,
             Err(e) => {
-                eprintln!("get class error: {e:?}");
+                if get_option(config, "verbose") {
+                    eprintln!("ERROR: get class error: {e:?}");
+                }
                 continue;
             }
         };
