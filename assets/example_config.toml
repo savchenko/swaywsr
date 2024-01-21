@@ -15,3 +15,4 @@ TelegramDesktop = "Telegram"
 
 [general]
 separator = "  "
+ignore_ending = "."
