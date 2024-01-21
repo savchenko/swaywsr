@@ -30,11 +30,6 @@ jobs:
 
     - name: Security audit
       uses: actions-rs/audit-check@v1
-      on:
-        push:
-          paths: 
-            - '**/Cargo.toml'
-            - '**/Cargo.lock'
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
 
