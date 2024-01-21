@@ -1,10 +1,10 @@
 [package]
 name = "swaywsr"
-version = "1.2.3"
-description = "Change i3-wm workspace names based on its contents"
-authors = ["Pedro Scaff <pedro@scaff.me>"]
-repository =  "https://github.com/pedroscaff/swaywsr"
-documentation =  "https://github.com/pedroscaff/swaywsr"
+version = "1.2.4"
+description = "Changes Sway workspace names based on their content"
+authors = ["Pedro Scaff <pedro@scaff.me>", "Andrew Savchenko <andrew@savchenko.net>"]
+repository =  "https://github.com/savchenko/swaywsr"
+documentation =  "https://github.com/savchenko/swaywsr"
 readme = "README.md"
 keywords = ["sway-wm", "window-manager", "workspaces", "linux"]
 categories = ["command-line-utilities"]
@@ -13,14 +13,16 @@ exclude = ["/assets/*"]
 edition = "2021"
 
 [dependencies]
-thiserror = "1.0.44"
-anyhow = "1.0.72"
+thiserror = "1.0.56"
+anyhow = "1.0.79"
 lazy_static = "1.4.0"
-clap = { version = "4", features = ["derive"] }
-toml = "0.7.6"
-serde = { version = "1.0.183", features = ["derive"] }
-swayipc = "3.0.1"
-itertools = "0.11.0"
+clap = { version = "4.4.18", features = ["derive"] }
+toml = "0.8.8"
+serde = { version = "1.0.195", features = ["derive"] }
+swayipc = "3.0.2"
+itertools = "0.12.0"
 
 [profile.release]
 strip = true
+overflow-checks = true
+incremental = false
