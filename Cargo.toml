@@ -22,7 +22,7 @@ lazy_static = "1.4.0"
 clap = { version = "4", features = ["derive"] }
 toml = "0.7.6"
 serde = { version = "1.0.183", features = ["derive"] }
-swayipc = "3.0.1"
+swayipc = "3.0.2"
 itertools = "0.11.0"
 
 [profile.release]
