@@ -10,15 +10,41 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
 
-    runs-on: ubuntu-latest
-
+  lint:
+    runs-on: ubuntu-20.04
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - uses: actions/checkout@v3
+      - name: Run DevSkim scanner
+        uses: microsoft/DevSkim-Action@v1
 
-    - uses: actions/cache@v3
+      - name: Run cargo-audit
+        uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run cargo-deny
+        uses: EmbarkStudios/cargo-deny-action@v1.5.7
+
+      - name: Upload DevSkim scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: devskim-results.sarif
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Pull cache
+      uses: actions/cache@v3
       with:
         path: |
           ~/.cargo/bin/
@@ -28,16 +54,8 @@ jobs:
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Security audit
-      uses: actions-rs/audit-check@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Build
       run: cargo build --verbose
 
     - name: Run tests
       run: cargo test --verbose
-
-    - name: cargo-deny
-      uses: EmbarkStudios/cargo-deny-action@v1.5.7
