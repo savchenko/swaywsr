@@ -138,41 +138,67 @@ fn get_classes(workspace: &Node, config: &Config) -> Vec<String> {
 
 /// Update all workspace names in tree
 pub fn update_tree(connection: &mut Connection, config: &Config) -> anyhow::Result<()> {
+
     let tree = connection.get_tree()?;
+
+    let char_ignore = match config.general.get("ignore") {
+        Some(s) => s,
+        None => ".",
+    };
+
     for workspace in get_workspaces(tree) {
-        let separator = match config.general.get("separator") {
-            Some(s) => s,
-            None => " | ",
-        };
 
-        let classes = get_classes(&workspace, config);
-        let classes = if get_option(config, "remove_duplicates") {
-            classes.into_iter().unique().collect()
+        let workspace_name_opt: Option<String> = workspace.name.clone().into();
+        let workspace_name = workspace_name_opt.unwrap_or("".to_string());
+
+        if workspace_name != "__i3_scratch" && !workspace_name.ends_with(char_ignore) {
+
+            let separator = match config.general.get("separator") {
+                Some(s) => s,
+                None => " | ",
+            };
+
+            let classes = get_classes(&workspace, config);
+
+            let classes = if get_option(config, "remove_duplicates") {
+                classes.into_iter().unique().collect()
+            } else {
+                classes
+            };
+
+            if get_option(config, "verbose") {
+                println!(
+                    "INFO: Workspace: {:#?}. Classes: {:#?}", 
+                    workspace_name, classes.join(", ")
+                );
+            }
+
+            let classes = classes.join(separator);
+            let classes = if !classes.is_empty() {
+                format!(" {}", classes)
+            } else {
+                classes
+            };
+
+            let old: String = workspace
+                .name
+                .to_owned()
+                .ok_or_else(|| LookupError::WorkspaceName(Box::new(workspace)))?;
+
+            let mut new = old.split(' ').next().unwrap().to_owned();
+
+            if !classes.is_empty() {
+                new.push_str(&classes);
+            }
+
+            if old != new {
+                let command = format!("rename workspace \"{}\" to \"{}\"", old, new);
+                connection.run_command(&command)?;
+            }
         } else {
-            classes
-        };
-
-        let classes = classes.join(separator);
-        let classes = if !classes.is_empty() {
-            format!(" {}", classes)
-        } else {
-            classes
-        };
-
-        let old: String = workspace
-            .name
-            .to_owned()
-            .ok_or_else(|| LookupError::WorkspaceName(Box::new(workspace)))?;
-
-        let mut new = old.split(' ').next().unwrap().to_owned();
-
-        if !classes.is_empty() {
-            new.push_str(&classes);
-        }
-
-        if old != new {
-            let command = format!("rename workspace \"{}\" to \"{}\"", old, new);
-            connection.run_command(&command)?;
+            if get_option(config, "verbose") {
+                println!("INFO: ignoring {}", workspace_name)
+            }
         }
     }
     Ok(())
