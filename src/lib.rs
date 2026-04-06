@@ -34,7 +34,13 @@ enum LookupError {
 }
 
 fn get_option(config: &Config, key: &str) -> bool {
-    config.options.get(key).map_or(false, |v| *v)
+    config.options.get(key).cloned().unwrap_or_else(|| {
+        config
+            .general
+            .get(key)
+            .and_then(|s| s.parse::<bool>().ok())
+            .unwrap_or(false)
+    })
 }
 
 fn get_class(node: &Node, config: &Config) -> Result<String, LookupError> {
@@ -50,14 +56,32 @@ fn get_class(node: &Node, config: &Config) -> Result<String, LookupError> {
     };
 
     if let Some(class) = name {
-        let class_display_name = match config.aliases.get(&class) {
-            Some(alias) => alias,
-            None => &class,
+        let ignore_case = get_option(config, "ignore_case");
+
+        let class_display_name = if ignore_case {
+            config
+                .aliases
+                .iter()
+                .find(|(k, _)| k.to_lowercase() == class.to_lowercase())
+                .map(|(_, v)| v)
+                .unwrap_or(&class)
+        } else {
+            config.aliases.get(&class).unwrap_or(&class)
         };
 
         let no_names = get_option(config, "no_names");
 
-        Ok(match config.icons.get(&class) {
+        let icon = if ignore_case {
+            config
+                .icons
+                .iter()
+                .find(|(k, _)| k.to_lowercase() == class.to_lowercase())
+                .map(|(_, v)| v)
+        } else {
+            config.icons.get(&class)
+        };
+
+        Ok(match icon {
             Some(icon) => {
                 if no_names {
                     format!("{}", icon)
@@ -123,10 +147,10 @@ fn get_classes(workspace: &Node, config: &Config) -> Vec<String> {
     for node in window_nodes {
         let class = match get_class(node, config) {
             Ok(class) => class,
-            Err(e) => {
-                if get_option(config, "verbose") {
-                    eprintln!("ERROR: get class error: {e:?}");
-                }
+            Err(_e) => {
+                // if get_option(config, "verbose") {
+                //     eprintln!("ERROR: get class error: {_e:?}");
+                // }
                 continue;
             }
         };
@@ -141,7 +165,7 @@ pub fn update_tree(connection: &mut Connection, config: &Config) -> anyhow::Resu
 
     let tree = connection.get_tree()?;
 
-    let char_ignore = match config.general.get("ignore") {
+    let char_ignore = match config.general.get("ignore_ending") {
         Some(s) => s,
         None => ".",
     };
@@ -153,6 +177,7 @@ pub fn update_tree(connection: &mut Connection, config: &Config) -> anyhow::Resu
 
         if workspace_name != "__i3_scratch" && !workspace_name.ends_with(char_ignore) {
 
+            // TODO: Why the fuck is this in the loop?..
             let separator = match config.general.get("separator") {
                 Some(s) => s,
                 None => " | ",
